@@ -18,6 +18,21 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="addr_utils.cpp" />
+    <ClCompile Include="ipv4_subnetting_tool.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="subnet_allocation.cpp" />
+    <ClCompile Include="tree.cpp" />
+    <ClCompile Include="tree_node.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="addr_utils.hpp" />
+    <ClInclude Include="ipv4_subnetting_tool.hpp" />
+    <ClInclude Include="subnet_allocation.hpp" />
+    <ClInclude Include="tree.hpp" />
+    <ClInclude Include="tree_node.hpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -138,9 +153,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="ipv4_subnetting_tool.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
