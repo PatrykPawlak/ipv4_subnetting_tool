@@ -30,6 +30,11 @@ namespace ipv4_subnetting_tool
 			print_tree(*m_root_node);
 		}
 
+		bool tree::isEmpty()
+		{
+			return m_counter == 0;
+		}
+
 		void tree::write_to_file(std::ofstream** p_ofs, tree_node& p_root_node)
 		{
 			tree_node* current_iterator = &p_root_node;
@@ -69,7 +74,8 @@ namespace ipv4_subnetting_tool
 			{
 				std::cerr << "ERROR: Attempt to open file: [" + p_filename + "] failed.\n\n";
 				delete_node(this->m_root_node);
-				exit(1);
+				delete ofs;
+				return;
 			}
 			else
 			{
@@ -82,8 +88,8 @@ namespace ipv4_subnetting_tool
 				std::clog << "Attempt to write sorted subnets to file: [" + p_filename + "] succeeded.\n\n";
 
 				ofs->close();
+				delete ofs;
 			}
-			delete ofs;
 		}
 
 		void tree::read_from_file(const std::string& p_filename)
@@ -95,7 +101,7 @@ namespace ipv4_subnetting_tool
 			if (!ifs.is_open())
 			{
 				std::cerr << "ERROR: Attempt to open file: [" + p_filename + "] failed.\n\n";
-				exit(1);
+				return;
 			}
 			else
 			{
@@ -119,8 +125,6 @@ namespace ipv4_subnetting_tool
 
 				std::clog << "Attempt to read subnets from file to structure. Please wait...\n\n";
 
-				uint32_t counter = 0;
-
 				for (std::string line; std::getline(ifs, line);)
 				{
 
@@ -136,7 +140,6 @@ namespace ipv4_subnetting_tool
 					if (ip_found_flag)
 					{
 						ip = ip_result[0];
-						//ip = std::regex_replace(ip, std::regex("\/"), "");
 					}
 
 					if (cidr_mask_found_flag)
@@ -165,14 +168,10 @@ namespace ipv4_subnetting_tool
 						tree_node* new_node = new tree_node(subnet_alloc);
 
 						insert_node(&new_node);
-
-						new_node = nullptr;
-
-						delete new_node;
 					}
 					else
 					{
-						std::cerr << "ERROR: Cannot add subnet allocation from line [" << counter << "] {";
+						std::cerr << "ERROR: Cannot add subnet allocation from line [" << m_counter << "] {";
 						if (!ip_found_flag) std::cerr << "{incorrect ip addr} ";
 						else std::cerr << "{" << ip << "} ";
 						if (!dotted_mask_found_flag || !cidr_mask_found_flag) std::cerr << "{incorrect mask addr} ";
@@ -181,7 +180,7 @@ namespace ipv4_subnetting_tool
 						else std::cerr << "{" << comment << "}";
 						std::cerr << "}\n\n";
 					}
-					++counter;
+					++m_counter;
 				}
 			
 				std::clog << "Attempt to read subnets from file: [" + p_filename + "] succeeded.\n\n";
@@ -254,15 +253,29 @@ namespace ipv4_subnetting_tool
 					current_iterator = (*p_root_node);
 
 					// search where is future last child and first sibling of new node
-					while (current_iterator->m_next_sibling != nullptr
-						&& !(new_node_range.first <= current_iterator->m_next_sibling->m_data.get_uint_ip_addr())
-						&& new_node_range.second >= current_iterator->m_next_sibling->m_data.get_uint_ip_addr())
+					while (current_iterator->m_next_sibling != nullptr)
 					{
-						current_iterator = current_iterator->m_next_sibling;
+						std::pair<uint32_t, uint32_t> current_iterator_range = current_iterator->m_next_sibling->m_data.get_uint_addr_range();
+						
+						if (new_node_range.first <= current_iterator_range.first && new_node_range.second >= current_iterator_range.second)
+						{
+							current_iterator = current_iterator->m_next_sibling;
+						}
+						else
+						{
+							break;
+						}
 					}
 
-					last_child = current_iterator->m_next_sibling;
-					if (last_child != nullptr) first_sibling = last_child->m_next_sibling;
+					last_child = current_iterator;
+					first_sibling = current_iterator->m_next_sibling;
+
+					//last_child = current_iterator->m_next_sibling;
+					if (last_child != nullptr) {
+						//first_sibling = last_child->m_next_sibling;
+
+						last_child->m_next_sibling = nullptr;
+					}
 
 					// root node has parent
 					if ((*p_root_node)->m_parent != nullptr)
@@ -290,6 +303,7 @@ namespace ipv4_subnetting_tool
 					(*p_new_node)->m_first_child = (*p_root_node);
 					(*p_new_node)->m_next_sibling = first_sibling;
 					(*p_root_node) = (*p_new_node);
+					
 				}
 				// end of insert root node as child of new node
 
@@ -310,13 +324,11 @@ namespace ipv4_subnetting_tool
 
 					current_iterator = (*p_root_node)->m_next_sibling;
 
-					// root node has next sibling
 					if (current_iterator != nullptr)
 					{
 						// search where add new node after root node
 						insert_with_sorting(&current_iterator, &(*p_new_node));
 					}
-					// root node hasn't next sibling
 					else
 					{
 						(*p_root_node)->m_next_sibling = (*p_new_node);
@@ -338,8 +350,14 @@ namespace ipv4_subnetting_tool
 						(*p_root_node)->m_parent = nullptr;
 					}
 
+					if ((*p_root_node)->m_prev_sibling != nullptr) {
+						(*p_root_node)->m_prev_sibling->m_next_sibling = (*p_new_node);
+					}
+
 					(*p_new_node)->m_next_sibling = (*p_root_node);
+					(*p_new_node)->m_prev_sibling = (*p_root_node)->m_prev_sibling;
 					(*p_root_node)->m_prev_sibling = (*p_new_node);
+					(*p_root_node) = (*p_new_node);
 				}
 				// end of insert new node before root node
 

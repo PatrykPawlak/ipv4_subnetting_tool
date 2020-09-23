@@ -19,7 +19,7 @@ namespace ipv4_subnetting_tool
 		if (p_argc < 3)
 		{
 			print_help(p_argv[0]);
-			exit(1);
+			return;
 		}
 		else
 		{
@@ -50,11 +50,13 @@ namespace ipv4_subnetting_tool
 
 				m_tree->read_from_file(in_f_name);
 
+				if (m_tree->isEmpty()) return;
+
 				m_tree->save_to_file(out_f_name);
 			}
 			else
 			{
-				exit(1);
+				return;
 			}
 		}
 	}
