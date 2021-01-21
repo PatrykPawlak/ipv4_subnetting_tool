@@ -3,7 +3,7 @@
 ## About
 
 IPv4 subnetting tool is a comand-line piece of software allowing you to load text file containing list of IPv4 addresses and generate text file with right indents for 
-nested subnets.
+nested subnets. Also correct bad network IPv4 addresses (via calculations based on network/subnetwork mask).
 
 ## Usage
 ```
